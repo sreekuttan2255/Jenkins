@@ -22,7 +22,7 @@ def analyze_pipeline_failure(logs):
     error_log = "\n".join(error_lines) if error_lines else logs
 
     prompt = f"""
-    You are an expert DevOps engineer specializing in CI/CD pipelines, Java, Maven, and Docker builds.
+    You are an expert DevOps engineer specializing in CI/CD pipelines, Python, pytest, and Docker builds.
     The following Jenkins pipeline failed. Analyze the error logs below and provide:
     1. The root cause of the failure.
     2. Detailed remediation steps to fix the issue.
