@@ -24,21 +24,27 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                sh 'docker build -t myapp .' // Adjust tag and context as needed
-            }
-        }
+        // Temporarily comment out Docker build so we can test the AI script first
+        // stage('Docker Build') {
+        //     steps {
+        //         sh 'docker build -t myapp .' // Adjust tag and context as needed
+        //     }
+        // }
     }
 
     post {
         failure {
             script {
-                // Run the Python analyzer script
-                // The build_logs.txt file is already generated in the workspace by the Maven step
-                sh '''
-                    python3 pipeline_analyzer.py build_logs.txt
-                '''
+                // Run the Python analyzer script INSIDE a Python container!
+                docker.image('python:3.9').inside {
+                    sh '''
+                        # Install the required library for Gemini
+                        pip install google-generativeai
+
+                        # Run the analyzer script
+                        python3 pipeline_analyzer.py build_logs.txt
+                    '''
+                }
             }
         }
     }
