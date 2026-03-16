@@ -34,8 +34,8 @@ pipeline {
             script {
                 // Run the Python analyzer script directly
                 sh '''
-                    # Install the required library for Gemini if not already present
-                    pip3 install google-generativeai --break-system-packages || true
+                    # Install the NEW required library for Gemini if not already present
+                    pip3 install google-genai --break-system-packages || true
 
                     # Run the analyzer script
                     python3 pipeline_analyzer.py build_logs.txt
