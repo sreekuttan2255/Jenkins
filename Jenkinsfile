@@ -6,21 +6,22 @@ pipeline {
     }
 
     stages {
-        stage('Maven Build') {
+        stage('Python Test') {
             steps {
-                // Redirect standard output and error to build_logs.txt
-                // We use || true to ensure the pipeline continues to the post block
-                // even if the maven build fails
-                sh 'mvn clean compile > build_logs.txt 2>&1 || true' 
-                
-                // Then we check if the build actually succeeded by reading the log
-                // If it contains BUILD FAILURE, we explicitly fail the stage
-                sh '''
-                    if grep -q "BUILD FAILURE" build_logs.txt; then
-                        echo "Maven build failed."
-                        exit 1
-                    fi
-                '''
+                // Here we run a command that is guaranteed to fail so we can test the AI agent!
+                // We run this inside a python container because your base Jenkins doesn't have python installed
+                docker.image('python:3.9').inside {
+                    // This creates a deliberate SyntaxError by missing a closing quote
+                    sh '''
+                        echo 'print("Hello World)' > bad_script.py
+                        python3 bad_script.py > build_logs.txt 2>&1 || true
+
+                        if grep -q "SyntaxError" build_logs.txt; then
+                            echo "Python test failed as expected."
+                            exit 1
+                        fi
+                    '''
+                }
             }
         }
 
