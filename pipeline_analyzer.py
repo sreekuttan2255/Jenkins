@@ -1,14 +1,18 @@
 import os
 import sys
-import openai
-from openai import OpenAI
+import google.generativeai as genai
 
 def analyze_pipeline_failure(logs):
     """
-    Analyzes Jenkins pipeline failure logs using OpenAI and returns remediation steps.
-    Only error lines are sent to OpenAI to reduce token usage.
+    Analyzes Jenkins pipeline failure logs using Google Gemini and returns remediation steps.
+    Only error lines are sent to Gemini to reduce token usage.
     """
-    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    api_key = os.getenv('GEMINI_API_KEY')
+    if not api_key:
+        return "Error: GEMINI_API_KEY environment variable not set."
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     # Extract only error lines (case-insensitive)
     error_lines = []
@@ -34,18 +38,10 @@ def analyze_pipeline_failure(logs):
     """
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful AI assistant for CI/CD troubleshooting."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1000,
-            temperature=0.5
-        )
-        return response.choices[0].message.content.strip()
+        response = model.generate_content(prompt)
+        return response.text.strip()
     except Exception as e:
-        return f"Error calling OpenAI API: {str(e)}"
+        return f"Error calling Gemini API: {str(e)}"
 
 if __name__ == "__main__":
     # Read logs from stdin or file
