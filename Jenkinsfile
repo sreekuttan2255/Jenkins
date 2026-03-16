@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        OPENAI_API_KEY = credentials('openai-api-key') // Assuming you have this credential set up in Jenkins
+        GEMINI_API_KEY = credentials('gemini-api-key') // Assuming you have this credential set up in Jenkins
     }
 
     stages {
