@@ -1,6 +1,6 @@
 import os
 import sys
-import google.generativeai as genai
+from google import genai
 
 def analyze_pipeline_failure(logs):
     """
@@ -10,9 +10,6 @@ def analyze_pipeline_failure(logs):
     api_key = os.getenv('GEMINI_API_KEY')
     if not api_key:
         return "Error: GEMINI_API_KEY environment variable not set."
-    
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
 
     # Extract only error lines (case-insensitive)
     error_lines = []
@@ -38,7 +35,11 @@ def analyze_pipeline_failure(logs):
     """
 
     try:
-        response = model.generate_content(prompt)
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
         return response.text.strip()
     except Exception as e:
         return f"Error calling Gemini API: {str(e)}"
