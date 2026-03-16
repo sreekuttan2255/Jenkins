@@ -9,18 +9,20 @@ pipeline {
         stage('Python Test') {
             steps {
                 // Here we run a command that is guaranteed to fail so we can test the AI agent!
-                // We run this inside a python container because your base Jenkins doesn't have python installed
-                docker.image('python:3.9').inside {
-                    // This creates a deliberate SyntaxError by missing a closing quote
-                    sh '''
-                        echo 'print("Hello World)' > bad_script.py
-                        python3 bad_script.py > build_logs.txt 2>&1 || true
+                // We use a script block because docker.image().inside must run inside a script block in Declarative Pipelines
+                script {
+                    docker.image('python:3.9').inside {
+                        // This creates a deliberate SyntaxError by missing a closing quote
+                        sh '''
+                            echo 'print("Hello World)' > bad_script.py
+                            python3 bad_script.py > build_logs.txt 2>&1 || true
 
-                        if grep -q "SyntaxError" build_logs.txt; then
-                            echo "Python test failed as expected."
-                            exit 1
-                        fi
-                    '''
+                            if grep -q "SyntaxError" build_logs.txt; then
+                                echo "Python test failed as expected."
+                                exit 1
+                            fi
+                        '''
+                    }
                 }
             }
         }
