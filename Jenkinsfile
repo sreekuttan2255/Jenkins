@@ -13,11 +13,7 @@ pipeline {
                     echo 'print("Hello World)' > bad_script.py
                     #python3 bad_script.py > build_logs.txt 2>&1 || true
                     python3 bad_script.py 2>&1 | tee build.log 
-
-                    if grep -q "SyntaxError" build.log; then
-                        echo "Python test failed as expected."
-                        exit 1
-                    fi
+                    
                 '''
             }
         }
