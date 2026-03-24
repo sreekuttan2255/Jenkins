@@ -19,12 +19,7 @@ pipeline {
             }
         }
 
-        // Temporarily comment out Docker build so we can test the AI script first
-        // stage('Docker Build') {
-        //     steps {
-        //         sh 'docker build -t myapp .' // Adjust tag and context as needed
-        //     }
-        // }
+        // You can add more stages here
     }
 
     post {
@@ -34,9 +29,6 @@ pipeline {
                 sh '''
                     # Install the NEW required library for Gemini if not already present
                     #pip3 install google-genai --break-system-packages || true
-
-                    # Extract error lines to error_logs.txt
-                    #grep -E "ERROR|FAIL|Exception|Traceback|SyntaxError" build_logs.txt > error_logs.txt || true
 
                     # Run the analyzer script
                     python3 pipeline_analyzer.py build.log
