@@ -2,7 +2,7 @@ import os
 import sys
 from google import genai
 
-def analyze_pipeline_failure(logs):
+def analyze_pipeline_failure(build_log, jenkins_log):
     """
     Analyzes Jenkins pipeline failure logs using Google Gemini and returns remediation steps.
     Only error lines are sent to Gemini to reduce token usage.
@@ -13,10 +13,16 @@ def analyze_pipeline_failure(logs):
 
     # Extract only error lines (case-insensitive)
     error_lines = []
-    for line in logs.splitlines():
-        if any(keyword in line.lower() for keyword in ["error", "exception", "fail", "fatal", "traceback"]):
-            error_lines.append(line)
-    error_log = "\n".join(error_lines) if error_lines else logs
+    if build_log_exists := bool(build_log):
+        for line in build_log.splitlines():
+            if any(keyword in line.lower() for keyword in ["error", "exception", "fail", "fatal", "traceback"]):
+                error_lines.append(line)
+        error_log = "\n".join(error_lines) if error_lines else build_log
+    elif jenkins_log_exists := bool(jenkins_log):
+        for line in jenkins_log.splitlines():
+            if any(keyword in line.lower() for keyword in ["error", "exception", "fail", "fatal", "traceback"]):
+                error_lines.append(line)
+        error_log = "\n".join(error_lines) if error_lines else jenkins_log
 
     prompt = f"""
     You are an expert DevOps engineer specializing in CI/CD pipelines, Python, pytest, and Docker builds.
@@ -45,15 +51,24 @@ def analyze_pipeline_failure(logs):
         return f"Error calling Gemini API: {str(e)}"
 
 if __name__ == "__main__":
-    # Read logs from stdin or file
-    if len(sys.argv) > 1:
-        log_file = sys.argv[1]
-        with open(log_file, 'r') as f:
-            logs = f.read()
+    # Read logs from files or stdin
+    build_log = ""
+    jenkins_log = ""
+    if len(sys.argv) > 2:
+        build_log_file = sys.argv[1]
+        jenkins_log_file = sys.argv[2]
+        with open(build_log_file, 'r') as f:
+            build_log = f.read()
+        with open(jenkins_log_file, 'r') as f:
+            jenkins_log = f.read()
+    elif len(sys.argv) > 1:
+        build_log_file = sys.argv[1]
+        with open(build_log_file, 'r') as f:
+            build_log = f.read()
     else:
-        logs = sys.stdin.read()
+        build_log = sys.stdin.read()
 
-    remediation = analyze_pipeline_failure(logs)
+    remediation = analyze_pipeline_failure(build_log, jenkins_log)
     print("=== AI Remediation Analysis ===")
     print(remediation)
     print("===============================")
