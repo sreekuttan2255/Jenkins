@@ -1,6 +1,6 @@
 # Simple Python test script
 
-def main:
+def main():
     print("Python environment is working!")
 
     # A small test calculation
@@ -8,7 +8,7 @@ def main:
     b = 7
     result = a + b
 
-    print(f"The result of {a} + {b} is: {result})
+    print(f"The result of {a} + {b} is: {result}")
 
 if __name__ == "__main__":
     main()
