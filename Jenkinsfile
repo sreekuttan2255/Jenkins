@@ -33,7 +33,7 @@ pipeline {
                 #pip3 install google-genai --break-system-packages || true
 
                 # Run the analyzer script
-                python3 pipeline_analyzer.py build.log jenkins.log
+                python3 pipeline_analyzer.py jenkins.log
                 '''
         }
     }
