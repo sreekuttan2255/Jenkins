@@ -10,10 +10,10 @@ pipeline {
             steps {
                 // Here we run a command that is guaranteed to fail so we can test the AI agent!
                 sh '''
-                    echo 'print("Hello World)' > bad_script.py
+                    #echo 'print("Hello World)' > bad_script.py
                     #python3 bad_script.py > build_logs.txt 2>&1 || true
                     set -o pipefail
-                    python3 bad_script.py 2>&1 | tee build.log 
+                    python3 function.py 2>&1 | tee build.log 
                 '''
             }
         }
