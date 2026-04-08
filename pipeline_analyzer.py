@@ -2,7 +2,7 @@ import os
 import sys
 from google import genai
 
-def analyze_pipeline_failure(build_log, jenkins_log):
+def analyze_pipeline_failure(build_log):
     """
     Analyzes Jenkins pipeline failure logs using Google Gemini and returns remediation steps.
     Only error lines are sent to Gemini to reduce token usage.
@@ -13,16 +13,28 @@ def analyze_pipeline_failure(build_log, jenkins_log):
 
     # Extract only error lines (case-insensitive)
     error_lines = []
-    if build_log_exists := bool(build_log):
-        for line in build_log.splitlines():
-            if any(keyword in line.lower() for keyword in ["error", "exception", "fail", "fatal", "traceback"]):
-                error_lines.append(line)
-        error_log = "\n".join(error_lines) if error_lines else build_log
-    elif jenkins_log_exists := bool(jenkins_log):
-        for line in jenkins_log.splitlines():
-            if any(keyword in line.lower() for keyword in ["error", "exception", "fail", "fatal", "traceback"]):
-                error_lines.append(line)
-        error_log = "\n".join(error_lines) if error_lines else jenkins_log
+    keywords = ["error", "exception", "fail", "fatal", "traceback"]
+
+    if jenkins_log:
+        j_errors = [line for line in jenkins_log.splitlines() if any(k in line.lower() for k in keywords)]
+        if j_errors:
+            error_lines.append("--- Jenkins Log Errors ---")
+            error_lines.extend(j_errors)
+
+    if build_log:
+        b_errors = [line for line in build_log.splitlines() if any(k in line.lower() for k in keywords)]
+        if b_errors:
+            error_lines.append("--- Build Log Errors ---")
+            error_lines.extend(b_errors)
+
+    if error_lines:
+        error_log = "\n".join(error_lines)
+    else:
+        error_log = ""
+        if jenkins_log:
+            error_log += f"--- Jenkins Log ---\n{jenkins_log}\n"
+        if build_log:
+            error_log += f"--- Build Log ---\n{build_log}\n"
 
     prompt = f"""
     You are an expert DevOps engineer specializing in CI/CD pipelines, Python, pytest, and Docker builds.
@@ -55,12 +67,12 @@ if __name__ == "__main__":
     build_log = ""
     jenkins_log = ""
     if len(sys.argv) > 2:
-        build_log_file = sys.argv[1]
-        jenkins_log_file = sys.argv[2]
-        with open(build_log_file, 'r') as f:
-            build_log = f.read()
+        jenkins_log_file = sys.argv[1]
+        build_log_file = sys.argv[2]
         with open(jenkins_log_file, 'r') as f:
             jenkins_log = f.read()
+        with open(build_log_file, 'r') as f:
+            build_log = f.read()
     elif len(sys.argv) > 1:
         build_log_file = sys.argv[1]
         with open(build_log_file, 'r') as f:
