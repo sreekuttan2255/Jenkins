@@ -2,7 +2,7 @@ import os
 import sys
 from google import genai
 
-def analyze_pipeline_failure(build_log):
+def analyze_pipeline_failure(build_log, jenkins_log):
     """
     Analyzes Jenkins pipeline failure logs using Google Gemini and returns remediation steps.
     Only error lines are sent to Gemini to reduce token usage.
@@ -69,14 +69,24 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         jenkins_log_file = sys.argv[1]
         build_log_file = sys.argv[2]
-        with open(jenkins_log_file, 'r') as f:
-            jenkins_log = f.read()
-        with open(build_log_file, 'r') as f:
-            build_log = f.read()
+        try:
+            with open(jenkins_log_file, 'r') as f:
+                jenkins_log = f.read()
+        except FileNotFoundError:
+            pass
+            
+        try:
+            with open(build_log_file, 'r') as f:
+                build_log = f.read()
+        except FileNotFoundError:
+            pass
     elif len(sys.argv) > 1:
         build_log_file = sys.argv[1]
-        with open(build_log_file, 'r') as f:
-            build_log = f.read()
+        try:
+            with open(build_log_file, 'r') as f:
+                build_log = f.read()
+        except FileNotFoundError:
+            pass
     else:
         build_log = sys.stdin.read()
 
