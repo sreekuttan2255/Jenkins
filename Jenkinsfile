@@ -13,7 +13,8 @@ pipeline {
                     #echo 'print("Hello World)' > bad_script.py
                     #python3 bad_script.py > build_logs.txt 2>&1 || true
                     set -o pipefail
-                    python3 function.py 2>&1 | tee build.log 
+                    #python3 function.py 2>&1 | tee build.log 
+                    python3 dependancy_checker.py 2>&1 | tee build.log 
                     cat build.log
                 '''
             }
