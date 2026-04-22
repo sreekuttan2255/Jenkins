@@ -1,42 +1,43 @@
 pipeline {
-    agent any
-
-    environment {
-        GEMINI_API_KEY = credentials('gemini-api-key') // Assuming you have this credential set up in Jenkins
-    }
-
-    stages {
-        stage('Python Test') {
-            steps {
-                // Here we run a command that is guaranteed to fail so we can test the AI agent!
-                sh '''
-                    #echo 'print("Hello World)' > bad_script.py
-                    #python3 bad_script.py > build_logs.txt 2>&1 || true
-                    set -o pipefail
-                    #python3 function.py 2>&1 | tee build.log 
-                    pip install -r requirements.txt
-                    python3 dependancy_checker.py 2>&1 | tee build.log 
-                    cat build.log
-                '''
-            }
-        }
-
-        // You can add more stages here as needed, for example, stages for building, deploying, etc.
-    }
-
-    post {
-        failure {
-            script {
-                def log=currentBuild.rawBuild.getLog(1000)
-                writeFile file: 'jenkins.log', text: log.join('\n')
-            }   
-            sh '''
-                # Install the NEW required library for Gemini if not already present
-                #pip3 install google-genai --break-system-packages || true
-
-                # Run the analyzer script
-                python3 pipeline_analyzer.py jenkins.log build.log
-                '''
-        }
-    }
+   agent any
+   environment {
+       GEMINI_API_KEY = credentials('gemini-api-key')
+   }
+   stages {
+       stage('Install Dependencies') {
+           steps {
+               sh '''
+                   set -o pipefail
+                   pip install -r requirements.txt 2>&1 | tee install.log
+               '''
+           }
+       }
+       stage('Dependency Validation') {
+           steps {
+               sh '''
+                   set -o pipefail
+                   python3 dependency_checker.py 2>&1 | tee validation.log
+               '''
+           }
+       }
+       stage('Run Application') {
+           steps {
+               sh '''
+                   set -o pipefail
+                   python3 function.py 2>&1 | tee app.log
+               '''
+           }
+       }
+   }
+   post {
+       failure {
+           script {
+               def log = currentBuild.rawBuild.getLog(1000)
+               writeFile file: 'jenkins.log', text: log.join('\n')
+           }
+           sh '''
+               python3 pipeline_analyzer.py jenkins.log install.log validation.log app.log
+           '''
+       }
+   }
 }
